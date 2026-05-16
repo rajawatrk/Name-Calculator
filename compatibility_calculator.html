@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Name Compatibility Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #1a0a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Stars ── */
+    #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star {
+      position: absolute;
+      width: 2px; height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0;
+      animation: twinkle var(--d, 3s) var(--delay, 0s) ease-in-out infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50%       { opacity: var(--op, 0.8); }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 0.5px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 480px;
+      backdrop-filter: blur(12px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #f5d9ff;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: rgba(245,217,255,0.45);
+      text-align: center;
+      margin-bottom: 2rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Form ── */
+    .field { margin-bottom: 1.1rem; }
+
+    label {
+      display: block;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(245,217,255,0.5);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 0.5px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: #f5d9ff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]::placeholder { color: rgba(245,217,255,0.25); }
+    input[type="text"]:focus        { border-color: rgba(200,130,255,0.6); }
+
+    /* ── Button ── */
+    .btn {
+      width: 100%;
+      margin-top: 1.4rem;
+      padding: 13px;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn:hover  { opacity: 0.88; }
+    .btn:active { transform: scale(0.98); }
+
+    /* ── Result ── */
+    .result-box {
+      display: none;
+      margin-top: 1.8rem;
+      text-align: center;
+      animation: fadeUp 0.5s ease forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-pct {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 64px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e879f9, #f472b6, #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .heart-row {
+      font-size: 22px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .result-msg {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: rgba(245,217,255,0.7);
+      max-width: 320px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+
+    .bar-wrap {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      margin: 14px 0 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+      border-radius: 99px;
+      transition: width 1s cubic-bezier(.2,.8,.2,1);
+      width: 0%;
+    }
+
+    .divider {
+      border: none;
+      border-top: 0.5px solid rgba(255,255,255,0.1);
+      margin: 1.6rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="starfield"></div>
+
+  <div class="card">
+    <p class="title">Compatibility</p>
+    <p class="subtitle">Name calculator</p>
+    <p class="subtitle">Powered by boredom af</p>
+
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="nameA" placeholder="e.g. Elizabeth" />
+    </div>
+    <div class="field">
+      <label>Partner's name</label>
+      <input type="text" id="nameB" placeholder="e.g. Mr Darcy" />
+    </div>
+    <div class="field">
+      <label>Checking for…</label>
+      <input type="text" id="topic" placeholder="e.g. love, hate, friendship" />
+    </div>
+
+    <button class="btn" onclick="calculate()">Calculate compatibility </button>
+
+    <div class="result-box" id="result">
+      <hr class="divider" />
+      <div class="heart-row" id="hearts"></div>
+      <div class="result-pct" id="pctText"></div>
+      <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
+      <p class="result-msg" id="resultMsg"></p>
+    </div>
+  </div>
+
+  <script>
+    /* ── Starfield ── */
+    const sf = document.getElementById('starfield');
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.cssText =
+        `left:${Math.random()*100}%;top:${Math.random()*100}%;` +
+        `--d:${2+Math.random()*4}s;--delay:${Math.random()*5}s;` +
+        `--op:${0.4+Math.random()*0.6}`;
+      sf.appendChild(s);
+    }
+
+    /* ── Your Python algorithm, ported to JS ── */
+    function calcScore(a, b, c) {
+      // Build the combined list: name_a + topic + name_b
+      const combined = [...a, ...c, ...b];
+
+      // Count occurrences of each unique character (preserving order)
+      const counts  = [];
+      const checked = [];
+      for (const ch of combined) {
+        if (!checked.includes(ch)) {
+          counts.push(combined.filter(x => x === ch).length);
+          checked.push(ch);
+        }
+      }
+
+      // Repeatedly fold the list until only 2 numbers remain
+      while (counts.length > 2) {
+        let w    = counts.length - 1;
+        const next = [];
+        let q    = 0;
+        while (q <= w) {
+          next.push(q !== w ? counts[q] + counts[w] : counts[q]);
+          q++; w--;
+        }
+        counts.length = 0;
+        counts.push(...next);
+      }
+
+      // Reduce each number to a single digit by summing its digits repeatedly
+      function toSingleDigit(n) {
+        while (n >= 10) {
+          n = String(n).split('').reduce((a, d) => a + Number(d), 0);
+        }
+        return n;
+      }
+
+      const d1 = toSingleDigit(counts[0]);
+      const d2 = toSingleDigit(counts[1]);
+
+      // Final answer: first digit × 10 + second digit (same as your Python)
+      return d1 * 10 + d2;
+    }
+
+    /* ── Messages & hearts ── */
+    function getMessage(pct) {
+      if (pct >= 80) return "What can I even say? Damn!";
+      if (pct >= 60) return "Boring... but not bad.";
+      if (pct >= 40) return "Plenty of fish in the sea. Let this one go.";
+      if (pct >= 20) return "Red Flag!!! like it ever stopped you.";
+      return "A challenging pairing, but every great love story has its obstacles to overcome.";
+    }
+
+    function getHearts(pct) {
+      const filled = Math.round(pct / 20);
+      return '♥'.repeat(filled) + '♡'.repeat(5 - filled);
+    }
+
+    /* ── Main calculate function ── */
+    function calculate() {
+      const a = document.getElementById('nameA').value.trim().toLowerCase();
+      const b = document.getElementById('nameB').value.trim().toLowerCase();
+      const c = document.getElementById('topic').value.trim().toLowerCase();
+
+      if (!a || !b || !c) {
+        alert('Please fill in all three fields.');
+        return;
+      }
+
+      let pct = calcScore(a.split(''), b.split(''), c.split(''));
+      pct = Math.min(pct, 99); // cap at 99% for fun
+
+      // Show result
+      const box = document.getElementById('result');
+      box.style.display = 'block';
+      box.style.animation = 'none';
+      box.offsetHeight; // force reflow to restart animation
+      box.style.animation = '';
+
+      document.getElementById('pctText').textContent  = pct + '%';
+      document.getElementById('hearts').textContent   = getHearts(pct);
+      document.getElementById('resultMsg').textContent = getMessage(pct);
+
+      // Animate the progress bar
+      document.getElementById('barFill').style.width = '0%';
+      setTimeout(() => {
+        document.getElementById('barFill').style.width = pct + '%';
+      }, 100);
+    }
+
+    /* ── Allow Enter key to trigger calculate ── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') calculate();
+    });
+  </script>
+
+</body>
+</html>
